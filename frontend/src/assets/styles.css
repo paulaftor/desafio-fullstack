@@ -1,0 +1,157 @@
+/* Estilos gerais */
+body {
+  font-family: 'Poppins', Arial, sans-serif;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+  background-color: #f4f4f4;
+}
+
+.title {
+  font-family: 'Poppins', Arial, sans-serif;
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #4447ed;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+/* Alinhamento centralizado da tela */
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+/* Estilo para a página de cadastro */
+.register-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Estilo do contêiner de login */
+.modal-content {
+  background-color: #fff;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px;
+}
+
+/* Estilos do formulário de login */
+.form-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* Estilo para cada campo de input */
+.input-container {
+  margin-bottom: 1rem;
+  text-align: left;
+}
+
+.input-container label {
+  font-size: 0.85rem;
+  color: #4447ed;
+}
+
+.input-container input {
+  width: 100%;
+  padding: 0.75rem;
+  margin-top: 0.25rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-sizing: border-box; /* Garante que o padding não afete o tamanho total do input */
+}
+
+/* Estilo para o link de "Esqueceu sua senha?" */
+.forgot-password {
+  font-size: 0.85rem;
+  color: #4447ed;
+  text-decoration: none;
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+.forgot-password:hover {
+  text-decoration: underline;
+}
+
+/* Botão principal de login */
+.btn-primary {
+  background-color: #4447ed;
+  color: #fff;
+  padding: 1rem;
+  border: none;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  width: 100%;
+  margin-top: 15px;
+}
+
+.btn-primary:hover {
+  background-color: #393beb;
+}
+
+/* Link para cadastro */
+.register-link-container {
+  font-size: 0.85rem;
+  border: 1px solid #00000066;
+  border-radius: 20px; 
+}
+
+.register-link-container a {
+  color: #4447ed;
+  text-decoration: none;
+}
+
+.register-link-container a:hover {
+  text-decoration: underline;
+}
+
+/* Separador "ou" */
+.separator {
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.separator hr {
+  border: 0;
+  border-top: 1px solid #ccc;
+}
+
+.separator p {
+  position: absolute;
+  top: -0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #fff;
+  padding: 0 1rem;
+  font-size: 0.85rem;
+  color: #4447ed;
+}
+
+/* Botões de login social */
+.btn-outline {
+  background-color: transparent;
+  color: #4447ed;
+  border: 1px solid #4447ed;
+  padding: 1rem;
+  border-radius: 5px;
+  margin-bottom: 1rem;
+  cursor: pointer;
+  width: 100%;
+}
+
+.btn-outline:hover {
+  background-color: #4447ed;
+  color: #fff;
+}

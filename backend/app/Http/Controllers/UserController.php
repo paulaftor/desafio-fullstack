@@ -17,49 +17,63 @@ class UserController extends Controller
         $request->validate([
             'nome' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'senha' => 'required|string|min:8|confirmed',
-            'cpf' => 'required|string|max:255|unique:users', 
-            'data_nascimento' => 'required|date', 
+            'senha' => 'required|string|confirmed',
+            'cpf' => 'required|string|size:11|unique:users',
+            'data_nascimento' => 'required|date',
+            'telefone' => 'required|string|max:15',
+            'logradouro' => 'required|string|max:255',
+            'numero' => 'required|string|max:10',
+            'bairro' => 'required|string|max:255',
+            'cidade' => 'required|string|max:255',
+            'estado' => 'required|string|size:2',
+            'cep' => 'required|string|size:8',
+            'parentesco' => 'nullable|string|max:255',
             'telefones' => 'nullable|array',
-            'telefones.*' => 'nullable|string', 
+            'telefones.*' => 'nullable|string|max:15',
             'emails' => 'nullable|array',
-            'emails.*' => 'nullable|string|email', 
+            'emails.*' => 'nullable|string|email|max:255',
         ]);
 
-        // Criar o usuário
+        // Criar o usuário principal
         $user = User::create([
             'nome' => $request->nome,
             'email' => $request->email,
             'senha' => bcrypt($request->senha),
-            'cpf' => $request->cpf, 
+            'cpf' => $request->cpf,
             'data_nascimento' => $request->data_nascimento,
-            'telefone' => $request->telefone, 
+            'telefone' => $request->telefone,
             'logradouro' => $request->logradouro,
             'numero' => $request->numero,
             'bairro' => $request->bairro,
             'cidade' => $request->cidade,
             'estado' => $request->estado,
             'cep' => $request->cep,
+            'parentesco' => $request->parentesco,
         ]);
 
-        // Associar telefones (se houver)
+        // Associar telefones adicionais (se houver)
         if ($request->has('telefones')) {
             foreach ($request->telefones as $telefone) {
-                $telefoneModel = Telefone::create(['numero' => $telefone]);
-                $user->telefones()->attach($telefoneModel->id);
+                if (!empty($telefone)) {
+                    $telefoneModel = Telefone::firstOrCreate(['telefone' => $telefone]); // Evita duplicação
+                    $user->telefones()->attach($telefoneModel->id);
+                }
             }
         }
 
-        // Associar e-mails (se houver)
+        // Associar emails adicionais (se houver)
         if ($request->has('emails')) {
             foreach ($request->emails as $email) {
-                $emailModel = Email::create(['email' => $email]);
-                $user->emails()->attach($emailModel->id);
+                if (!empty($email)) {
+                    $emailModel = Email::firstOrCreate(['email' => $email]); // Evita duplicação
+                    $user->emails()->attach($emailModel->id);
+                }
             }
         }
 
-        return response()->json($user, 201);
+        return response()->json($user->load('telefones', 'emails'), 201);
     }
+
 
 
     public function login(Request $request)
