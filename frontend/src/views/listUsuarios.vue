@@ -16,7 +16,7 @@
         </thead>
         <tbody>
           <tr v-for="user in users" :key="user.id">
-            <td>{{ user.name }}</td>
+            <td>{{ user.nome }}</td>
             <td>{{ user.cpf }}</td>
             <td>{{ user.email }}</td>
             <td>{{ user.telefone }}</td>
@@ -27,85 +27,79 @@
         </tbody>
       </table>
 
-      <!-- Paginacao -->
+      <!-- Paginação -->
       <div class="pagination">
         <button @click="previousPage" :disabled="currentPage === 1" class="btn-outline">Anterior</button>
         <button @click="nextPage" :disabled="currentPage === totalPages" class="btn-outline">Próximo</button>
       </div>
     </div>
+
+    <!-- Modal -->
+    <ModalCadastro :isOpen="showModal" @close="showModal = false">
+      <FormularioCadastro :user="selectedUser" @save="handleSave" />
+    </ModalCadastro>
   </div>
 </template>
 
 <script>
+import ModalCadastro from "@/components/ModalCadastro.vue";
+import FormularioCadastro from "@/components/FormularioCadastro.vue";
+
 export default {
+  components: {
+    ModalCadastro,
+    FormularioCadastro
+  },
   data() {
     return {
-      users: [], // Armazena os usuários
-      currentPage: 1, // Página atual
-      totalPages: 1, // Total de páginas para a paginação
-      itemsPerPage: 5, // Número de usuários por página
+      users: [],
+      currentPage: 1,
+      totalPages: 1,
+      itemsPerPage: 5,
+      showModal: false,
+      selectedUser: null
     };
-  },
-  computed: {
-    paginatedUsers() {
-      const start = (this.currentPage - 1) * this.itemsPerPage;
-      const end = start + this.itemsPerPage;
-      return this.users.slice(start, end);
-    },
   },
   methods: {
     async fetchUsers() {
       try {
-        const response = await fetch("http://localhost:8000/api/users", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-          },
-        });
-
-        if (!response.ok) {
-          // Verifica se a resposta não foi bem-sucedida
-          console.error("Erro na resposta da API:", response.statusText);
-          return;
-        }
+        const response = await fetch("http://localhost:8000/api/users");
+        if (!response.ok) throw new Error("Erro na resposta da API");
 
         const data = await response.json();
-
-        // Verifica se a resposta está no formato esperado
-        if (data && data.success) {
-          this.users = data.users;
-          this.totalPages = Math.ceil(this.users.length / this.itemsPerPage); // Calcula o número de páginas
-        } else {
-          // Caso o formato da resposta não seja o esperado
-          console.error("Erro ao buscar os usuários:", data);
+        if (Array.isArray(data)) {
+          this.users = data;
+          this.totalPages = Math.ceil(this.users.length / this.itemsPerPage);
         }
       } catch (error) {
-        // Log de erro mais detalhado
-        console.error("Erro na requisição:", error);
+        console.error("Erro ao buscar usuários:", error);
       }
     },
 
     editUser(user) {
-      console.log(`Editar usuário ${user.id}`);
-      // Lógica para editar o usuário
+      this.selectedUser = { ...user }; // Clona o objeto do usuário
+      this.showModal = true;
+    },
+
+    handleSave(updatedUser) {
+      const index = this.users.findIndex(u => u.id === updatedUser.id);
+      if (index !== -1) {
+        this.users[index] = updatedUser; // Atualiza a lista
+      }
+      this.showModal = false;
     },
 
     previousPage() {
-      if (this.currentPage > 1) {
-        this.currentPage--;
-      }
+      if (this.currentPage > 1) this.currentPage--;
     },
 
     nextPage() {
-      if (this.currentPage < this.totalPages) {
-        this.currentPage++;
-      }
-    },
+      if (this.currentPage < this.totalPages) this.currentPage++;
+    }
   },
   created() {
-    this.fetchUsers(); // Buscar os usuários quando o componente for criado
-  },
+    this.fetchUsers();
+  }
 };
 </script>
 
@@ -137,8 +131,8 @@ body {
   padding: 2rem;
   border-radius: 8px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 1000px; /* Ajustado para ocupar mais a tela */
+  width: 80vw;
+  max-width: 80vw; /* Ajustado para ocupar mais a tela */
 }
 
 /* Tabela de Usuários */
