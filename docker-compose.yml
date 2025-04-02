@@ -10,8 +10,12 @@ services:
       - ./backend:/var/www
     depends_on:
       - database
-    command: bash -c "until php artisan migrate --seed --force; do echo 'Esperando o banco de dados...'; sleep 5; done && php-fpm"
-
+    command: bash -c "
+          composer install --no-interaction &&
+          php artisan key:generate --no-interaction &&
+          php artisan jwt:secret --force &&
+          until php artisan migrate --seed --force; do echo 'Esperando o banco de dados...'; sleep 5; done &&
+          php-fpm"
 
   web:
     image: nginx:alpine
@@ -38,6 +42,7 @@ services:
       - dbdata:/var/lib/mysql
 
   frontend:
+    user: root
     build:
       context: ./frontend
       dockerfile: Dockerfile  

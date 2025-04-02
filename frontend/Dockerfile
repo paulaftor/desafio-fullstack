@@ -4,10 +4,12 @@ WORKDIR /app
 
 COPY package.json package-lock.json ./
 
-RUN npm install
+RUN npm install -g @vue/cli && npm install --legacy-peer-deps
 
 COPY . .
 
-EXPOSE 5173
+RUN chmod -R 777 /app
 
-CMD ["npm", "run", "dev"]
+EXPOSE 8080
+
+CMD ["npm", "run", "serve"]

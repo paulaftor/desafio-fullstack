@@ -22,4 +22,6 @@ RUN composer install --no-interaction
 EXPOSE 9000
 
 CMD php artisan key:generate --no-interaction && \
-    php-fpm
+php artisan jwt:secret --force && \
+php-fpm
+
