@@ -1,6 +1,6 @@
 <template>
   <div>
-    <FormularioCadastro @save="registerUser" />
+    <FormularioCadastro @save="registerUser" mode="cadastro"/>
   </div>
 </template>
 
@@ -12,7 +12,6 @@ export default {
   methods: {
     registerUser(user) {
       console.log('Cadastrando usuário:', user);
-      // Chamar API para cadastrar
     }
   }
 };

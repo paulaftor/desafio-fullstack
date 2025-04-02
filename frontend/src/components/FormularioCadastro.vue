@@ -2,7 +2,7 @@
     <div class="register-container">
       <div class="modal-content">
         <div class="title">Cadastro</div>
-        <form @submit.prevent="register">
+        <form @submit.prevent="salvar">
           
           <!-- Dados Pessoais -->
           <fieldset>
@@ -147,11 +147,13 @@
           </fieldset>
           
           <!-- Botão Cadastrar -->
-          <button type="submit" class="btn-primary">Cadastrar</button>
+          <button type="submit" class="btn-primary">
+            {{ mode === 'cadastro' ? 'Cadastrar' : 'Salvar' }}
+          </button>
+
         </form>
   
-        <!-- Link para Login -->
-        <div class="login-link-container">
+        <div v-if="mode === 'cadastro'" class="login-link-container">
           <p>Já tem uma conta? <a href="#" @click="$router.push('/')">Faça Login</a></p>
         </div>
       </div>
@@ -160,7 +162,19 @@
   
   
   <script>
+  
   export default {
+    props: {
+      mode: {
+        type: String,
+        required: true, // Garante que o componente sempre saiba se está no modo cadastro ou edição
+      },
+      usuario: {
+        type: Object,
+        default: () => ({}), // Permite receber um usuário para edição
+      }
+    },
+
     data() {
       return {
         nome: "",
@@ -183,7 +197,36 @@
         haErros: false // Variável para controlar se há erros
       };
     },
+    watch: {
+      usuario: {
+        handler(novoUsuario) {
+          if (this.mode === "edicao" && novoUsuario) {
+            this.popularCampos(novoUsuario);
+          }
+        },
+        deep: true,
+        immediate: true
+      }
+    },
     methods: {
+      popularCampos(usuario) {
+        this.nome = usuario.nome || '';
+        this.cpf = usuario.cpf || '';
+        this.data_nascimento = this.formatarDataParaBR(usuario.data_nascimento) || '';
+        this.telefone = usuario.telefone || '';
+        this.telefone2 = usuario.telefone2 || '';
+        this.email = usuario.email || '';
+        this.email2 = usuario.email2 || '';
+        this.senha = ''; // Não é necessário preencher no caso de edição
+        this.senha_confirmacao = ''; // Não é necessário preencher no caso de edição
+        this.cep = usuario.cep || '';
+        this.logradouro = usuario.logradouro || '';
+        this.numero = usuario.numero || '';
+        this.bairro = usuario.bairro || '';
+        this.cidade = usuario.cidade || '';
+        this.estado = usuario.estado || '';
+        this.parentesco = usuario.parentesco || '';
+      },
       validateNome() {
         if (!this.nome?.trim()) {
           this.errors.nome = "Nome é obrigatório";
@@ -326,12 +369,27 @@
         const [dia, mes, ano] = data.split('/');
         return `${ano}-${mes}-${dia}`; // Formato YYYY-MM-DD
       },
+
+      formatarDataParaBR(data) {
+        if (!data) return null;
+
+        // Dividindo a data no formato ISO (YYYY-MM-DD)
+        const [ano, mes, dia] = data.split('-');
+        return `${dia}/${mes}/${ano}`; // Formato DD/MM/YYYY
+      },
+
+
+      salvar() {
+        if (this.mode === "cadastro") {
+          this.register();
+        } else {
+          this.update();
+        }
+      },
   
       async register() {
-        console.log("register chamado");
-        // Limpar erros antes de validar
         this.errors = {};
-        this.haErros = false;  // Resetar o valor para false
+        this.haErros = false;  
   
         // Validar todos os campos
         this.validateNome();
@@ -384,7 +442,9 @@
   
             if (response.ok) {
               alert("Usuário cadastrado com sucesso!");
-              this.$router.push("/usuarios"); // Redirecionar para a página de usuários
+              localStorage.setItem("token", responseData.token);
+              console.log("token", responseData.token);
+              this.$router.push("/usuarios"); 
             } else {
               this.errors = responseData.erros || {};
               this.haErros = true;
@@ -395,7 +455,83 @@
             this.haErros = true;
           }
         }
+      },
+
+      async update() {
+        console.log("Salvando edição do usuário...");
+        
+        // Limpar erros antes de validar
+        this.errors = {};
+        this.haErros = false;
+
+        // Validar todos os campos
+        this.validateNome();
+        this.validateNumero();
+        this.validateCpf();
+        this.validateDataNascimento();
+        this.validateTelefone();
+        this.validateTelefone2();
+        this.validateEmail();
+        this.validateEmail2();
+        this.validateCep();
+
+        // Verificar se há erros
+        if (!this.haErros) {
+          try {
+            const userData = {
+              nome: this.nome,
+              cpf: this.removeFormatacao(this.cpf),
+              data_nascimento: this.formatarDataParaISO(this.data_nascimento),
+              telefone: this.removeFormatacao(this.telefone),
+              telefone2: this.removeFormatacao(this.telefone2),
+              email: this.email,
+              email2: this.email2,
+              senha: this.senha,  // Se a senha não for obrigatória, evite enviá-la caso não tenha sido alterada
+              senha_confirmation: this.senha_confirmacao,
+              cep: this.removeFormatacao(this.cep),
+              logradouro: this.logradouro,
+              numero: this.numero,
+              bairro: this.bairro,
+              cidade: this.cidade,
+              estado: this.estado,
+              parentesco: this.parentesco
+            };
+
+            console.log("Dados enviados para atualização:", userData); 
+            const token = localStorage.getItem("token"); 
+
+            const response = await fetch(`http://localhost:8000/api/users/${this.usuario.id}`, {
+              method: "PUT",  
+              headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+                "Authorization": `Bearer ${token}`, 
+              },
+              body: JSON.stringify(userData),
+            });
+
+            const responseData = await response.json();
+            console.log("Resposta da API:", responseData);
+
+            if (response.ok) {
+              alert("Usuário atualizado com sucesso!");
+              this.$emit('updateUser', responseData);  
+            } else {
+              this.errors = responseData.erros || {};
+              this.haErros = true;
+              // se for erro 403, não tem permissão 
+              if (response.status === 403) {
+                alert("Você não tem permissão para atualizar este usuário");
+              }
+            }
+          } catch (error) {
+            console.error("Erro ao atualizar usuário:", error);
+            this.errors = { geral: "Erro ao atualizar usuário" };
+            this.haErros = true;
+          }
+        }
       }
+
     }
   };
   </script>
@@ -408,7 +544,7 @@
     border-radius: 8px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     width: 100%;
-    max-width: 80%;
+    max-width: 100%;
     overflow-y: auto; 
   }
   
@@ -457,7 +593,7 @@
     padding: 1rem;
     border: none;
     border-radius: 5px;
-    width: 30%;
+    width: 20vw;
     cursor: pointer;
   }
   

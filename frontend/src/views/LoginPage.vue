@@ -68,7 +68,7 @@ export default {
           },
           body: JSON.stringify({
             email: this.email,
-            senha: this.password, // Ajustado para "senha" conforme sua API
+            senha: this.password,
           }),
         });
 

@@ -1,44 +1,64 @@
 <template>
-    <div v-if="isOpen" class="modal-overlay" @click.self="close">
-      <div class="modal-container">
-        <slot></slot> <!-- Aqui vai o conteúdo do modal -->
-      </div>
-    </div>
-  </template>
-  
-  <script>
-  export default {
-    props: {
-      isOpen: Boolean
+  <div v-if="isOpen" class="modal-overlay" @click.self="close">
+    <div class="modal-container">
+      <button class="close-button" @click="close">&times;</button>
+      <slot>
+        <FormularioCadastro mode="cadastro" />
+      </slot>
+  </div>
+  </div>
+</template>
+
+<script>
+export default {
+  props: {
+    isOpen: Boolean
+  },
+  methods: {
+    close() {
+      this.$emit("close");
     },
-    methods: {
-      close() {
-        this.$emit("close");
-      }
+    handleUpdatedUser(updatedUser) {
+      this.$emit('updateUser', updatedUser);  
     }
-  };
-  </script>
-  
-  <style scoped>
- .modal-overlay {
+  }
+};
+</script>
+
+<style scoped>
+/* Fundo escurecido do modal */
+.modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
   background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
+  height: 100%;
 }
 
+/* Container do modal */
 .modal-container {
   background: white;
-  padding: 10px;
   border-radius: 8px;
-  width: 100%; /* A largura agora ocupa 80% da tela */
-  overflow-y: auto; /* Adiciona rolagem no caso de conteúdo muito longo */
-  box-sizing: border-box;
+  width: 80%; /* Ajustável conforme necessário */
+  max-width: 90%; /* Evita que fique muito grande */
+  position: relative; /* Necessário para posicionar o botão de fechar */
 }
-  </style>
-  
+
+/* Botão de fechar (X) */
+.close-button {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #333;
+}
+
+.close-button:hover {
+  color: red;
+}
+</style>

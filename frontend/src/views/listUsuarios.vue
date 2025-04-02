@@ -29,14 +29,18 @@
 
       <!-- Paginação -->
       <div class="pagination">
-        <button @click="previousPage" :disabled="currentPage === 1" class="btn-outline">Anterior</button>
-        <button @click="nextPage" :disabled="currentPage === totalPages" class="btn-outline">Próximo</button>
+        <button @click="previousPage" :disabled="currentPage === 1" class="btn-outline">
+          <span class="icon">←</span> <!-- Ícone de seta para a esquerda -->
+        </button>
+        <button @click="nextPage" :disabled="currentPage === totalPages" class="btn-outline">
+          <span class="icon">→</span> <!-- Ícone de seta para a direita -->
+        </button>
       </div>
     </div>
 
     <!-- Modal -->
     <ModalCadastro :isOpen="showModal" @close="showModal = false">
-      <FormularioCadastro :user="selectedUser" @save="handleSave" />
+      <FormularioCadastro :usuario="selectedUser" @updateUser="handleSave" mode="edicao" />
     </ModalCadastro>
   </div>
 </template>
@@ -63,13 +67,13 @@ export default {
   methods: {
     async fetchUsers() {
       try {
-        const response = await fetch("http://localhost:8000/api/users");
+        const response = await fetch(`http://localhost:8000/api/users?page=${this.currentPage}`);
         if (!response.ok) throw new Error("Erro na resposta da API");
 
         const data = await response.json();
-        if (Array.isArray(data)) {
-          this.users = data;
-          this.totalPages = Math.ceil(this.users.length / this.itemsPerPage);
+        if (data.data) {
+          this.users = data.data; // Dados dos usuários da página atual
+          this.totalPages = data.last_page; // Total de páginas
         }
       } catch (error) {
         console.error("Erro ao buscar usuários:", error);
@@ -82,19 +86,31 @@ export default {
     },
 
     handleSave(updatedUser) {
-      const index = this.users.findIndex(u => u.id === updatedUser.id);
+      console.log("Usuário atualizado:", updatedUser);
+      // atualizar o usuario que foi editado
+      const index = this.users.findIndex(user => user.id === updatedUser.id);
       if (index !== -1) {
-        this.users[index] = updatedUser; // Atualiza a lista
+        this.users[index] = updatedUser;
+        console.log("Usuário atualizado na lista:", this.users[index]);
       }
-      this.showModal = false;
+
+      // ordenar pelo updated_at
+      this.users.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+
     },
 
     previousPage() {
-      if (this.currentPage > 1) this.currentPage--;
+      if (this.currentPage > 1) {
+        this.currentPage--;
+        this.fetchUsers(); // Atualiza os usuários
+      }
     },
 
     nextPage() {
-      if (this.currentPage < this.totalPages) this.currentPage++;
+      if (this.currentPage < this.totalPages) {
+        this.currentPage++;
+        this.fetchUsers(); // Atualiza os usuários
+      }
     }
   },
   created() {
@@ -123,16 +139,18 @@ body {
 .users-list-container {
   display: flex;
   justify-content: center;
-  padding: 20px;
+  align-items: center;
+  min-height: 100vh; /* Ajusta para ocupar toda a altura da tela */
+  background-color: white;
 }
 
 .modal-content {
   background-color: #fff;
   padding: 2rem;
-  border-radius: 8px;
+  border-radius: 14px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  width: 80vw;
-  max-width: 80vw; /* Ajustado para ocupar mais a tela */
+  width: 100%;
+  max-width: 100vw; /* Limita a largura */
 }
 
 /* Tabela de Usuários */
@@ -149,8 +167,8 @@ body {
 }
 
 .users-table th {
-  background-color: transparent; /* Fundo transparente */
-  color: #4447ed; /* Cor roxa no texto */
+  background-color: transparent;
+  color: #4447ed;
   font-weight: normal;
 }
 
@@ -179,13 +197,19 @@ body {
 }
 
 .pagination button {
-  padding: 10px 20px;
+  padding: 8px 15px;
   margin: 0 5px;
   background-color: #4447ed;
   color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: 50%;
   cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
 }
 
 .pagination button:disabled {
@@ -194,5 +218,14 @@ body {
 
 .pagination button:hover {
   background-color: #393beb;
+}
+
+.pagination .icon {
+  font-size: 18px;
+}
+
+/* Estilos de ícone para setas */
+.icon {
+  font-size: 18px;
 }
 </style>
