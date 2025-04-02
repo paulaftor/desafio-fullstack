@@ -26,27 +26,29 @@ export default {
 </script>
 
 <style scoped>
-/* Fundo escurecido do modal */
+
 .modal-overlay {
   position: fixed;
   background: rgba(0, 0, 0, 0.5);
   display: flex;
-  align-items: center;
   justify-content: center;
   width: 100%;
   height: 100%;
+  top: 0;
 }
 
-/* Container do modal */
 .modal-container {
   background: white;
   border-radius: 8px;
-  width: 80%; /* Ajustável conforme necessário */
-  max-width: 90%; /* Evita que fique muito grande */
-  position: relative; /* Necessário para posicionar o botão de fechar */
+  width: 80%; 
+  max-width: 90%;
+  max-height: 85%; 
+  position: absolute;
+  top: 100px;
+  overflow: auto;
 }
 
-/* Botão de fechar (X) */
+
 .close-button {
   position: absolute;
   top: 10px;

@@ -140,7 +140,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100vh; /* Ajusta para ocupar toda a altura da tela */
+  min-height: 80vh; /* Ajusta para ocupar toda a altura da tela */
   background-color: white;
 }
 

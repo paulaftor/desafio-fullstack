@@ -13,10 +13,13 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 
 WORKDIR /var/www
 
-COPY ./ /var/www
+COPY . .
+
+RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
 RUN composer install --no-interaction
 
 EXPOSE 9000
 
-CMD php artisan key:generate --no-interaction && php-fpm
+CMD php artisan key:generate --no-interaction && \
+    php-fpm

@@ -10,7 +10,7 @@ class Telefone extends Model
     use HasFactory;
 
     protected $fillable = [
-        'numero', 
+        'telefone', 
     ];
 
     // Relacionamento muitos para muitos com usuários

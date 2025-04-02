@@ -1,10 +1,10 @@
 <template>
     <div class="register-container">
       <div class="modal-content">
-        <div class="title">Cadastro</div>
+        <!-- <div class="title">Cadastro</div> -->
         <form @submit.prevent="salvar">
           
-          <!-- Dados Pessoais -->
+          <!-- Campos de dados pessoais -->
           <fieldset>
             <legend>Dados pessoais</legend>
             <div class="form-row">
@@ -26,10 +26,10 @@
                 <input type="text" id="data_nascimento" v-model="data_nascimento" v-mask="'##/##/####'" placeholder="dd/mm/yyyy" @blur="validateDataNascimento" />
                 <span v-if="errors.data_nascimento" class="error-message">{{ errors.data_nascimento }}</span>
               </div>
-              <!-- Parentesco -->
+              <!-- listbox de parentesco não obrigatório -->
               <div class="input-container">
                 <label for="parentesco">Parentesco</label>
-                <select id="parentesco" v-model="parentesco">
+                <select id="parentesco" v-model="parentesco" :class="{'gray-text': !parentesco, 'black-text': parentesco}">
                   <option value="">Selecione o parentesco</option>
                   <option value="pai">Pai</option>
                   <option value="mae">Mãe</option>
@@ -41,7 +41,7 @@
             </div>
           </fieldset>
           
-          <!-- Dados de Contato -->
+          <!-- dados de contato -->
           <fieldset>
             <legend>Dados de contato</legend>
             <div class="form-row">
@@ -82,7 +82,7 @@
             </div>
           </fieldset>
           
-          <!-- Endereço -->
+          <!-- dados do endereço -->
           <fieldset>
             <legend>Endereço</legend>
             <div class="form-row">
@@ -93,7 +93,7 @@
               </div>
               <div class="input-container">
                 <label for="estado">Estado</label>
-                <select id="estado" v-model="estado">
+                <select id="estado" v-model="estado" :class="{'gray-text': !estado, 'black-text': estado}">
                   <option value="">Selecione o estado</option>
                   <option value="AC">AC</option>
                   <option value="AL">AL</option>
@@ -146,7 +146,6 @@
             </div>
           </fieldset>
           
-          <!-- Botão Cadastrar -->
           <button type="submit" class="btn-primary">
             {{ mode === 'cadastro' ? 'Cadastrar' : 'Salvar' }}
           </button>
@@ -217,8 +216,8 @@
         this.telefone2 = usuario.telefone2 || '';
         this.email = usuario.email || '';
         this.email2 = usuario.email2 || '';
-        this.senha = ''; // Não é necessário preencher no caso de edição
-        this.senha_confirmacao = ''; // Não é necessário preencher no caso de edição
+        this.senha = ''; // optei por não fazer nada com senha nessa tela
+        this.senha_confirmacao = ''; 
         this.cep = usuario.cep || '';
         this.logradouro = usuario.logradouro || '';
         this.numero = usuario.numero || '';
@@ -361,21 +360,21 @@
       },
   
       removeFormatacao(valor) {
-        return valor.replace(/\D/g, ""); // Remove todos os caracteres não numéricos
+        return valor.replace(/\D/g, ""); // remoção de todos os caracteres não numéricos
       },
   
       formatarDataParaISO(data) {
         if (!data) return null;
         const [dia, mes, ano] = data.split('/');
-        return `${ano}-${mes}-${dia}`; // Formato YYYY-MM-DD
+        return `${ano}-${mes}-${dia}`; // formato YYYY-MM-DD
       },
 
       formatarDataParaBR(data) {
         if (!data) return null;
 
-        // Dividindo a data no formato ISO (YYYY-MM-DD)
+        // data no formato ISO (YYYY-MM-DD)
         const [ano, mes, dia] = data.split('-');
-        return `${dia}/${mes}/${ano}`; // Formato DD/MM/YYYY
+        return `${dia}/${mes}/${ano}`; 
       },
 
 
@@ -391,7 +390,7 @@
         this.errors = {};
         this.haErros = false;  
   
-        // Validar todos os campos
+        // validar os campos, exceto senhas
         this.validateNome();
         this.validateNumero();
         this.validateCpf();
@@ -404,7 +403,7 @@
         this.validateSenhaConfirmacao();
         this.validateCep();
   
-        // Verificar se há erros
+        // verifica se há erros
         if (!this.haErros) {
           try {
             const userData = {
@@ -412,9 +411,15 @@
               cpf: this.removeFormatacao(this.cpf),
               data_nascimento: this.formatarDataParaISO(this.data_nascimento),
               telefone: this.removeFormatacao(this.telefone),
-              telefone2: this.removeFormatacao(this.telefone2),
+              telefones: [
+                this.removeFormatacao(this.telefone), 
+                this.removeFormatacao(this.telefone2)
+              ].filter(t => t),
+              emails: [
+                this.email, 
+                this.email2
+              ].filter(e => e), 
               email: this.email,
-              email2: this.email2,
               senha: this.senha,
               senha_confirmation: this.senha_confirmacao,
               cep: this.removeFormatacao(this.cep),
@@ -426,7 +431,7 @@
               parentesco: this.parentesco
             };
   
-            console.log("Dados enviados:", userData); // Para depuração
+            console.log("Dados enviados:", userData); 
   
             const response = await fetch("http://localhost:8000/api/users", {
               method: "POST",
@@ -458,13 +463,10 @@
       },
 
       async update() {
-        console.log("Salvando edição do usuário...");
         
-        // Limpar erros antes de validar
         this.errors = {};
         this.haErros = false;
 
-        // Validar todos os campos
         this.validateNome();
         this.validateNumero();
         this.validateCpf();
@@ -475,7 +477,6 @@
         this.validateEmail2();
         this.validateCep();
 
-        // Verificar se há erros
         if (!this.haErros) {
           try {
             const userData = {
@@ -483,10 +484,18 @@
               cpf: this.removeFormatacao(this.cpf),
               data_nascimento: this.formatarDataParaISO(this.data_nascimento),
               telefone: this.removeFormatacao(this.telefone),
-              telefone2: this.removeFormatacao(this.telefone2),
+              telefones: [
+                this.removeFormatacao(this.telefone), 
+                this.removeFormatacao(this.telefone2) // telefone secundário
+              ].filter(t => t), // sem valores vazios
+
               email: this.email,
-              email2: this.email2,
-              senha: this.senha,  // Se a senha não for obrigatória, evite enviá-la caso não tenha sido alterada
+              emails: [
+                this.email,
+                this.email2 
+              ].filter(e => e),
+
+              senha: this.senha,
               senha_confirmation: this.senha_confirmacao,
               cep: this.removeFormatacao(this.cep),
               logradouro: this.logradouro,
@@ -496,6 +505,7 @@
               estado: this.estado,
               parentesco: this.parentesco
             };
+
 
             console.log("Dados enviados para atualização:", userData); 
             const token = localStorage.getItem("token"); 
@@ -551,9 +561,7 @@
   fieldset {
     border: none;
     border-left: 1px solid #ccc;
-    padding: 1rem;
     border-radius: 5px;
-    margin-bottom: 1rem;
   }
   
   legend {
@@ -586,6 +594,15 @@
     border-color: #4447ed;
     outline: none;
   }
+
+  .gray-text {
+  color: gray;
+}
+
+.black-text {
+  color: black;
+}
+
   
   .btn-primary {
     background-color: #4447ed;
@@ -603,12 +620,10 @@
     }
   }
   
-  /* Para campos com erro, aplicamos a classe .error diretamente no input */
   .input-container input.error {
-    border-color: red;  /* A borda vermelha */
+    border-color: red;  
   }
   
-  /* Mensagem de erro */
   .error-message {
     color: red;
     font-size: 12px;

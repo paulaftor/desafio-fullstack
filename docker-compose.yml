@@ -10,7 +10,7 @@ services:
       - ./backend:/var/www
     depends_on:
       - database
-    command: bash -c "until php artisan migrate --force; do echo 'Esperando o banco de dados...'; sleep 5; done && php-fpm"
+    command: bash -c "until php artisan migrate --seed --force; do echo 'Esperando o banco de dados...'; sleep 5; done && php-fpm"
 
 
   web:

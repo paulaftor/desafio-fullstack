@@ -12,6 +12,9 @@ use Tymon\JWTAuth\Exceptions\JWTException;
 
 class UserController extends Controller
 {
+    /**
+     * cadastra um novo usuário e associa telefones e emails.
+     */
     public function store(Request $request)
     {
         $request->validate([
@@ -34,7 +37,6 @@ class UserController extends Controller
             'emails.*' => 'nullable|string|email|max:255',
         ]);
 
-        // Criar o usuário principal
         $user = User::create([
             'nome' => $request->nome,
             'email' => $request->email,
@@ -51,21 +53,21 @@ class UserController extends Controller
             'parentesco' => $request->parentesco,
         ]);
 
-        // Associar telefones adicionais (se houver)
+        // associar telefones adicionais (se houver)
         if ($request->has('telefones')) {
             foreach ($request->telefones as $telefone) {
                 if (!empty($telefone)) {
-                    $telefoneModel = Telefone::firstOrCreate(['telefone' => $telefone]); // Evita duplicação
+                    $telefoneModel = Telefone::firstOrCreate(['telefone' => $telefone]); 
                     $user->telefones()->attach($telefoneModel->id);
                 }
             }
         }
 
-        // Associar emails adicionais (se houver)
+        // associar emails adicionais (se houver)
         if ($request->has('emails')) {
             foreach ($request->emails as $email) {
                 if (!empty($email)) {
-                    $emailModel = Email::firstOrCreate(['email' => $email]); // Evita duplicação
+                    $emailModel = Email::firstOrCreate(['email' => $email]);
                     $user->emails()->attach($emailModel->id);
                 }
             }
@@ -84,8 +86,9 @@ class UserController extends Controller
         ], 201);
     }
 
-
-
+    /**
+     * faz login e gera um token JWT.
+     */
     public function login(Request $request)
     {
         $request->validate([
@@ -99,7 +102,7 @@ class UserController extends Controller
             return response()->json(['error' => 'Credenciais inválidas'], 401);
         }
 
-        // Gerar o token JWT
+        // gerando token JWT
         try {
             $token = JWTAuth::fromUser($user);
         } catch (JWTException $e) {
@@ -112,17 +115,18 @@ class UserController extends Controller
         ]);
     }
 
-
+    /**
+     * atualiza cadastro do usuário
+     */
     public function update(Request $request, $id)
     {
-        // Verificar se o usuário autenticado é o mesmo que está tentando atualizar
+        // verificar se o usuário autenticado é o mesmo que está tentando atualizar
         $authenticatedUser = auth()->user();
 
         if ($authenticatedUser->id !== (int)$id) {
             return response()->json(['error' => 'Você não tem permissão para editar este usuário.'], 403);
         }
 
-        // Validar os dados da requisição
         $request->validate([
             'nome' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $id,
@@ -142,14 +146,13 @@ class UserController extends Controller
             'emails.*' => 'nullable|string|email|max:255',
         ]);
 
-        // Buscar o usuário pelo ID
+        // buscar o usuário pelo ID
         $user = User::find($id);
 
         if (!$user) {
             return response()->json(['error' => 'Usuário não encontrado'], 404);
         }
 
-        // Atualizar os dados do usuário
         $user->update([
             'nome' => $request->nome,
             'email' => $request->email,
@@ -165,40 +168,99 @@ class UserController extends Controller
             'parentesco' => $request->parentesco,
         ]);
 
-        // Atualizar os telefones, removendo os antigos e associando novos
+        // atualizar os telefones mantendo o principal
         if ($request->has('telefones')) {
-            $user->telefones()->detach();  // Remover todos os telefones atuais
-            foreach ($request->telefones as $telefone) {
-                if (!empty($telefone)) {
-                    $telefoneModel = Telefone::firstOrCreate(['telefone' => $telefone]);
-                    $user->telefones()->attach($telefoneModel->id);
-                }
+            $telefones = collect($request->telefones)->unique()->filter(); // Remove duplicados e vazios
+
+            $telefonePrincipal = $telefones->shift(); // primeiro telefone é principal
+            $user->update(['telefone' => $telefonePrincipal]);
+
+            // atualizar telefones secundários 
+            $user->telefones()->sync([]); // remove apenas os telefones secundários
+            foreach ($telefones as $telefone) {
+                $telefoneModel = Telefone::firstOrCreate(['telefone' => $telefone]);
+                $user->telefones()->attach($telefoneModel->id);
             }
+
+            $user->touch();
         }
 
-        // Atualizar os emails, removendo os antigos e associando novos
         if ($request->has('emails')) {
-            $user->emails()->detach();  // Remover todos os emails atuais
-            foreach ($request->emails as $email) {
-                if (!empty($email)) {
-                    $emailModel = Email::firstOrCreate(['email' => $email]);
-                    $user->emails()->attach($emailModel->id);
-                }
+            $emails = collect($request->emails)->unique()->filter();
+
+            $emailPrincipal = $emails->shift();
+            $user->update(['email' => $emailPrincipal]);
+
+            $user->emails()->sync([]);
+            foreach ($emails as $email) {
+                $emailModel = Email::firstOrCreate(['email' => $email]);
+                $user->emails()->attach($emailModel->id);
             }
+
+            $user->touch();
         }
 
-        // Retornar a resposta com o usuário atualizado
+        // buscar telefone secundário mais recente 
+        $telefoneSecundario = $user->telefones()
+        ->where('telefone', '!=', $user->telefone)
+        ->latest('telefones.created_at')
+        ->value('telefone');
+
+        $emailSecundario = $user->emails()
+        ->where('email', '!=', $user->email)
+        ->latest('emails.created_at')
+        ->value('email');
+
+        $user->telefone2 = $telefoneSecundario;
+        $user->email2 = $emailSecundario;
+
+        // retornar o usuário com os dados adicionais
         return response()->json($user->load('telefones', 'emails'), 200);
+
     }
 
-
-
+    /**
+     * lista usuários com paginação e inclui telefones e emails
+     */
     public function listar(Request $request)
     {
         $perPage = 5; 
-        $users = User::orderBy('updated_at', 'desc') 
-                    ->paginate($perPage);
+        
+        $users = User::with(['telefones' => function ($query) {
+            $query->orderBy('created_at', 'desc');
+        }, 'emails' => function ($query) {
+            $query->orderBy('created_at', 'desc');
+        }])
+        ->orderBy('updated_at', 'desc')
+        ->paginate($perPage);
+    
+        $users->getCollection()->transform(function ($user) {
+            $telefone2 = $user->telefones->where('telefone', '!=', $user->telefone)->first();
+            $email2 = $user->emails->where('email', '!=', $user->email)->first();
+    
+            return [
+                'id' => $user->id,
+                'nome' => $user->nome,
+                'cpf' => $user->cpf,
+                'data_nascimento' => $user->data_nascimento,
+                'telefone' => $user->telefone,
+                'telefone2' => $telefone2 ? $telefone2->telefone : null,
+                'email' => $user->email,
+                'email2' => $email2 ? $email2->email : null,
+                'cep' => $user->cep,
+                'logradouro' => $user->logradouro,
+                'numero' => $user->numero,
+                'bairro' => $user->bairro,
+                'cidade' => $user->cidade,
+                'estado' => $user->estado,
+                'parentesco' => $user->parentesco,
+                'created_at' => $user->created_at,
+                'updated_at' => $user->updated_at,
+            ];
+        });
+    
         return response()->json($users);
     }
+    
 
 }

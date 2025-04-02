@@ -11,8 +11,7 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
 class User extends Authenticatable implements JWTSubject
 {
     use HasFactory, Notifiable;
-    use HasApiTokens;  
-
+    use HasApiTokens;  // habilita autenticação via API tokens (Sanctum)
 
     protected $fillable = [
         'nome', 'email', 'senha', 'cpf', 'data_nascimento', 
@@ -20,30 +19,35 @@ class User extends Authenticatable implements JWTSubject
         'estado', 'cep', 'parentesco'
     ];
 
+    // campos que serão ocultados nas respostas JSON
     protected $hidden = [
         'senha', 'remember_token',
     ];
 
-  
+    // converter atributos automaticamente
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'senha' => 'hashed',
+        'senha' => 'hashed', 
     ];
 
-    // Relacionamento muitos para muitos com telefones 
+    /**
+     * relacionamento com telefones.
+     */
     public function telefones()
     {
         return $this->belongsToMany(Telefone::class, 'contatos_telefone', 'usuario_id', 'telefone_id');
     }
 
-    // Relacionamento muitos para muitos com emails
+    /**
+     * relacionamento com emails.
+     */
     public function emails()
     {
         return $this->belongsToMany(Email::class, 'contatos_email', 'usuario_id', 'email_id');
     }
 
     /**
-     * Obter o identificador exclusivo do usuário para o JWT.
+     * pega identificador único do usuário para o JWT.
      *
      * @return mixed
      */
@@ -53,7 +57,7 @@ class User extends Authenticatable implements JWTSubject
     }
 
     /**
-     * Obter as declarações personalizadas para o JWT.
+     * declarações personalizadas para o JWT.
      *
      * @return array
      */
@@ -61,5 +65,4 @@ class User extends Authenticatable implements JWTSubject
     {
         return []; 
     }
-
 }

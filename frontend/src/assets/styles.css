@@ -1,4 +1,3 @@
-/* Estilos gerais */
 body {
   font-family: 'Poppins', Arial, sans-serif;
   text-align: center;
@@ -16,23 +15,20 @@ body {
   font-weight: bold;
 }
 
-/* Alinhamento centralizado da tela */
 .login-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
+  height: 80vh;
   margin: 0;
 }
 
-/* Estilo para a página de cadastro */
 .register-container {
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-/* Estilo do contêiner de login */
 .modal-content {
   background-color: #fff;
   padding: 2rem;
@@ -42,14 +38,12 @@ body {
   max-width: 400px;
 }
 
-/* Estilos do formulário de login */
 .form-container {
   display: flex;
   flex-direction: column;
   width: 100%;
 }
 
-/* Estilo para cada campo de input */
 .input-container {
   margin-bottom: 1rem;
   text-align: left;
@@ -66,10 +60,9 @@ body {
   margin-top: 0.25rem;
   border: 1px solid #ccc;
   border-radius: 5px;
-  box-sizing: border-box; /* Garante que o padding não afete o tamanho total do input */
+  box-sizing: border-box;
 }
 
-/* Estilo para o link de "Esqueceu sua senha?" */
 .forgot-password {
   font-size: 0.85rem;
   color: #4447ed;
@@ -82,7 +75,6 @@ body {
   text-decoration: underline;
 }
 
-/* Botão principal de login */
 .btn-primary {
   background-color: #4447ed;
   color: #fff;
@@ -100,7 +92,6 @@ body {
   background-color: #393beb;
 }
 
-/* Link para cadastro */
 .register-link-container {
   font-size: 0.85rem;
   border: 1px solid #00000066;
@@ -116,7 +107,6 @@ body {
   text-decoration: underline;
 }
 
-/* Separador "ou" */
 .separator {
   margin-top: 1.5rem;
   margin-bottom: 1.5rem;
@@ -139,7 +129,6 @@ body {
   color: #4447ed;
 }
 
-/* Botões de login social */
 .btn-outline {
   background-color: transparent;
   color: #4447ed;
